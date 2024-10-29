@@ -74,6 +74,6 @@ class DataLoader:
         )
 
         if show_data:
-            print(self.train_df.head(rows_count))
-            print(self.test_df.head(rows_count))
-            print(self.validation_df.head(rows_count))
+            print(tabulate(self.train_df.map(lambda x: (x[:20] + '...') if isinstance(x, str) else x).head(rows_count), headers='keys', tablefmt='grid'))
+            print(tabulate(self.test_df.map(lambda x: (x[:20] + '...') if isinstance(x, str) else x).head(rows_count), headers='keys', tablefmt='grid'))
+            print(tabulate(self.validation_df.map(lambda x: (x[:20] + '...') if isinstance(x, str) else x).head(rows_count), headers='keys', tablefmt='grid'))
