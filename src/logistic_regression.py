@@ -8,13 +8,14 @@ class LogisticRegression:
         self.biases = None
         np.random.seed(random_state)
 
-    def fit(self, X_train, y_train, X_validation, y_validation, num_of_epochs=50, num_of_samples=500):
+    def fit(self, X_train, y_train, X_validation, y_validation, num_of_epochs=20, num_of_samples=500):
         self._initialize_bigrams(X_train[:, 1])
         features = self._construct_features(X_train[:, 1])
+        features_validation = self._construct_features(X_validation[:, 1])
         num_of_classes = max(y_train) + 1
 
         # TODO: this should be adjusted
-        learning_rate = 0.1
+        learning_rate = 0.2
 
         labels = self._construct_labels(y_train, num_of_classes)
 
@@ -22,22 +23,28 @@ class LogisticRegression:
         self.biases = np.zeros((1, num_of_classes))
 
         for i in range(num_of_epochs):
-            print(f'The loss at step {i} = {self._calculate_cross_entropy_loss(features, y_train)}')
+            if i % 10 == 0:
+                learning_rate = learning_rate / 2
+
+            print(f'The loss at step {i} = {self._calculate_cross_entropy_loss(features_validation, y_validation)}')
             indices = np.random.permutation(len(X_train))
-            batch_indices = indices[:num_of_samples]
 
-            y_hat = self._calculate_y_hat(features[batch_indices])
+            for j in range(len(X_train) // num_of_samples):
 
-            gradient_weights = (1 / num_of_samples) * np.dot(np.transpose(
-                y_hat - labels[batch_indices]
-            ), features[batch_indices])
+                batch_indices = indices[j * num_of_samples:(j + 1) * num_of_samples]
 
-            gradient_biases = (1 / num_of_samples) * np.sum(y_hat - labels[batch_indices], axis=0)
+                y_hat = self._calculate_y_hat(features[batch_indices])
 
-            self.weights -= learning_rate * gradient_weights.T
-            self.biases -= learning_rate * gradient_biases
+                gradient_weights = (1 / len(batch_indices)) * np.dot(np.transpose(
+                    y_hat - labels[batch_indices]
+                ), features[batch_indices])
 
-        print(f'The loss at last step = {self._calculate_cross_entropy_loss(features, y_train)}')
+                gradient_biases = (1 / len(batch_indices)) * np.sum(y_hat - labels[batch_indices], axis=0)
+
+                self.weights -= learning_rate * gradient_weights.T
+                self.biases -= learning_rate * gradient_biases
+
+        print(f'The loss at last step = {self._calculate_cross_entropy_loss(features_validation, y_validation)}')
 
         return
 
