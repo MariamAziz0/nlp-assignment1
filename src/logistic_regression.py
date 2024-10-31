@@ -8,14 +8,13 @@ class LogisticRegression:
         self.biases = None
         np.random.seed(random_state)
 
-    def fit(self, X_train, y_train, X_validation, y_validation, num_of_epochs=20, num_of_samples=500):
+    def fit(self, X_train, y_train, X_validation, y_validation, num_of_epochs=20, batch_size=500, learning_rate=0.5, rate_decay=0.5, patience=5):
         self._initialize_bigrams(X_train[:, 1])
         features = self._construct_features(X_train[:, 1])
         features_validation = self._construct_features(X_validation[:, 1])
         num_of_classes = max(y_train) + 1
-
-        # TODO: this should be adjusted
-        learning_rate = 0.2
+        best_validation_loss = np.inf
+        current_patience_counter = 0
 
         labels = self._construct_labels(y_train, num_of_classes)
 
@@ -23,15 +22,31 @@ class LogisticRegression:
         self.biases = np.zeros((1, num_of_classes))
 
         for i in range(num_of_epochs):
-            if i % 10 == 0:
-                learning_rate = learning_rate / 2
+            train_loss = self._calculate_cross_entropy_loss(features, y_train)
+            validation_loss = self._calculate_cross_entropy_loss(features_validation, y_validation)
 
-            print(f'The loss at step {i} = {self._calculate_cross_entropy_loss(features_validation, y_validation)}')
+            if i % 10 == 0:
+                print(f'Epoch {i}: Train loss = {train_loss}, Validation loss = {validation_loss}')
+
+            if validation_loss < best_validation_loss:
+                best_validation_loss = validation_loss
+                current_patience_counter = 0
+            else:
+                current_patience_counter += 1
+
+                if current_patience_counter >= patience:
+                    learning_rate = learning_rate * rate_decay
+                    current_patience_counter = 0
+                    print(f'Epoch {i}: Reducing learning rate to {learning_rate}')
+
             indices = np.random.permutation(len(X_train))
 
-            for j in range(len(X_train) // num_of_samples):
+            for j in range(len(X_train) // batch_size + 1):
 
-                batch_indices = indices[j * num_of_samples:(j + 1) * num_of_samples]
+                batch_indices = indices[j * batch_size:(j + 1) * batch_size]
+
+                if len(batch_indices) == 0:
+                    break
 
                 y_hat = self._calculate_y_hat(features[batch_indices])
 
@@ -43,8 +58,6 @@ class LogisticRegression:
 
                 self.weights -= learning_rate * gradient_weights.T
                 self.biases -= learning_rate * gradient_biases
-
-        print(f'The loss at last step = {self._calculate_cross_entropy_loss(features_validation, y_validation)}')
 
         return
 
@@ -75,7 +88,6 @@ class LogisticRegression:
                     features[i][self.bigram_to_index[bigram]] = 1
 
         return features
-
 
     def construct_features(self, tokens):
         features = np.zeros((len(tokens), len(self.bigrams_set)), dtype=np.int8)
