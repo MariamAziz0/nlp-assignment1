@@ -108,10 +108,10 @@ class LogisticRegression:
 
     def _calculate_cross_entropy_loss(self, features, y):
         z = np.dot(features, self.weights) + self.biases
-        sigma = self._softmax(z)
+        exp_z = self._softmax(z)
 
         loss = 0
         for i in range(len(y)):
-            loss -= np.log(sigma[i][y[i]] / sum(sigma[i]))
+            loss -= np.log(exp_z[i][y[i]])
 
         return loss / features.shape[0]
