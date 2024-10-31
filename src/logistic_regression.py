@@ -10,8 +10,8 @@ class LogisticRegression:
 
     def fit(self, X_train, y_train, X_validation, y_validation, num_of_epochs=20, batch_size=500, learning_rate=0.5, rate_decay=0.5, patience=5):
         self._initialize_bigrams(X_train[:, 1])
-        features = self._construct_features(X_train[:, 1])
-        features_validation = self._construct_features(X_validation[:, 1])
+        features = self.construct_features(X_train[:, 1])
+        features_validation = self.construct_features(X_validation[:, 1])
         num_of_classes = max(y_train) + 1
         best_validation_loss = np.inf
         current_patience_counter = 0
@@ -62,7 +62,7 @@ class LogisticRegression:
         return
 
     def predict(self, X):
-        features = self._construct_features(X[:, 1])
+        features = self.construct_features(X[:, 1])
         return np.argmax(self._calculate_y_hat(features), axis=1)
 
     def _get_bigrams_from_tokens(self, tokens):
@@ -77,17 +77,6 @@ class LogisticRegression:
             self.bigrams_set.update(bigrams)
 
         self.bigram_to_index = {bigram: idx for idx, bigram in enumerate(self.bigrams_set)}
-
-    def _construct_features(self, tokens):
-        features = np.zeros((len(tokens), len(self.bigrams_set)), dtype=np.int8)
-        for i in range(len(tokens)):
-            bigrams = self._get_bigrams_from_tokens(tokens[i])
-
-            for bigram in bigrams:
-                if bigram in self.bigram_to_index:
-                    features[i][self.bigram_to_index[bigram]] = 1
-
-        return features
 
     def construct_features(self, tokens):
         features = np.zeros((len(tokens), len(self.bigrams_set)), dtype=np.int8)
@@ -113,13 +102,9 @@ class LogisticRegression:
 
     def _calculate_y_hat(self, features):
         z = np.dot(features, self.weights) + self.biases
-        sigma = self._softmax(z)
-        y_hat = np.zeros(z.shape, dtype=int)
-        max_indices = np.argmax(sigma, axis=1)
-        y_hat[np.arange(sigma.shape[0]), max_indices] = 1
+        y_hat = self._softmax(z)
 
-        # return y_hat
-        return sigma
+        return y_hat
 
     def _calculate_cross_entropy_loss(self, features, y):
         z = np.dot(features, self.weights) + self.biases
