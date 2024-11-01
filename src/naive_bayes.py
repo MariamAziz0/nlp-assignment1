@@ -2,8 +2,8 @@ import numpy as np
 
 class NaiveBayes:
     def __init__(self, train_df, test_df):
-        self.train_df = train_df
-        self.test_df = test_df
+        self.train_df = train_df.copy()
+        self.test_df = test_df.copy()
         self.classes = sorted(train_df['label'].unique().tolist())
         self.vocab = set()
         self.big_doc = {c: {} for c in self.classes}
@@ -52,6 +52,11 @@ class NaiveBayes:
         return y_hat
 
     def _preprocess_vocab(self):
+        self.train_df['sentence'] = self.train_df['sentence'].str.lower()
+        self.train_df['tokens'] = self.train_df['tokens'].str.lower()
+        self.test_df['sentence'] = self.test_df['sentence'].str.lower()
+        self.test_df['tokens'] = self.test_df['tokens'].str.lower()
+
         for tokens in self.train_df['tokens']:
             self.vocab = self.vocab.union(set(tokens.split('|')))
         print(f'Finished preprocessing corpus vocabulary .. found {len(self.vocab)} word type.')
