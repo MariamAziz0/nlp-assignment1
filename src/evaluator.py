@@ -93,7 +93,7 @@ class Evaluator:
 
         print(tabulate(table_data, headers=["Micro Metrics", "Value"], tablefmt="grid"))
 
-    def plot_results(self):
+    def plot_results(self, title="Performance Metrics by Class and Averages Schemes"):
         metrics = ['precision', 'recall', 'f1']
         x = np.arange(len(metrics))
 
@@ -131,7 +131,7 @@ class Evaluator:
         plt.xticks(x, metrics)  # Set x-ticks to the metric names
         plt.xlabel("Metrics")
         plt.ylabel("Values")
-        plt.title("Performance Metrics by Class and Averages Schemes")
+        plt.title(title)
         plt.legend()
         plt.grid(True)
 
